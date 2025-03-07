@@ -81,4 +81,3 @@ UwaveデータをTNC用に変換する．
 
 
 
-# GestureSSL-EDA-Model-Selection
