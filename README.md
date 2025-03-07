@@ -64,7 +64,7 @@ UwaveデータをTNC用に変換する．
 TNCでHARを学習したモデルを識別の程度のためにUwaveで識別のみ学習する．これにより，TNCの優位性が示される．
 
 ```
-!python -m tnc.evaluation --data har --data_path './data/athena/Gesture/' --cv 1
+!python -m tnc.evaluation --data har --data_path './data/athena/Gesture/' --cv 1 --eval
 ```
 
 # 参考と謝辞
