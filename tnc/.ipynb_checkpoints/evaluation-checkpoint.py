@@ -75,7 +75,7 @@ def epoch_run_encoder(model, train_loader, test_loader, flatten=False, lr=0.01):
     return epoch_loss / batch_count, epoch_acc / batch_count, epoch_auc, epoch_auprc, c
 
 
-def run_test(data, e2e_lr, tnc_lr, cpc_lr, trip_lr, data_path, window_size, n_cross_val):
+def run_test(data, e2e_lr, tnc_lr, cpc_lr, trip_lr, data_path, window_size, n_cross_val, eval=False):
     # Load data
     with open(os.path.join(data_path, 'x_train.pkl'), 'rb') as f:
         x = pickle.load(f)
@@ -86,26 +86,29 @@ def run_test(data, e2e_lr, tnc_lr, cpc_lr, trip_lr, data_path, window_size, n_cr
     with open(os.path.join(data_path, 'state_test.pkl'), 'rb') as f:
         y_test = pickle.load(f)
 
-    trainset = torch.utils.data.TensorDataset(x_train, y_train)
+    trainset = torch.utils.data.TensorDataset(x, y)
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True)
     testset = torch.utils.data.TensorDataset(x_test, y_test)
-    test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=False)
+    test_loader = torch.utils.data.DataLoader(testset, batch_size=100, shuffle=True)
 
     tnc_accs, tnc_aucs, tnc_auprcs = [], [], []
     for cv in range(n_cross_val):
         # Define baseline models
         if data == 'waveform':
-            tnc_classifier = StateClassifier(input_size=3, output_size=8).to(device)
+            tnc_classifier = StateClassifier(input_size=618, output_size=8).to(device)
             tnc_classifier.train()
             tnc_model = torch.nn.Sequential(tnc_classifier).to(device)
         
         elif data == 'har':
-            encoding_size = 10
+            encoding_size = 100
             tnc_encoder = RnnEncoder(hidden_size=100, in_channel=3, encoding_size=encoding_size, device=device)
             tnc_checkpoint = torch.load('./ckpt/har/checkpoint_%d.pth.tar'%cv)
             tnc_encoder.load_state_dict(tnc_checkpoint['encoder_state_dict'])
             tnc_classifier = StateClassifier(input_size=encoding_size, output_size=8).to(device)
-            tnc_encoder.eval()
+            if eval:
+              tnc_encoder.eval()
+            else:
+              tnc_encoder.train()
             tnc_classifier.train()
             tnc_model = torch.nn.Sequential(tnc_encoder, tnc_classifier).to(device)
 
@@ -132,6 +135,7 @@ if __name__=='__main__':
     parser.add_argument('--data', type=str, default='simulation')
     parser.add_argument('--data_path', type=str, default='./data/athena/Gesture/')
     parser.add_argument('--cv', type=int, default=1)
+    parser.add_argument('--eval', action='store_true')
     args = parser.parse_args()
 
     if not os.path.exists('./ckpt/classifier_test'):
@@ -141,7 +145,7 @@ if __name__=='__main__':
     f.close()
     if args.data=='waveform':
         run_test(data='waveform', e2e_lr=0.0001, tnc_lr=0.01, cpc_lr=0.01, trip_lr=0.01,
-                 data_path=args.data_path, window_size=4, n_cross_val=1)
+                 data_path=args.data_path, window_size=4, n_cross_val=1, eval=args.eval)
     elif args.data=='har':
         run_test(data='har', e2e_lr=0.001, tnc_lr=0.1, cpc_lr=0.1, trip_lr=0.1,
-                 data_path=args.data_path, window_size=4, n_cross_val=args.cv)
+                 data_path=args.data_path, window_size=4, n_cross_val=args.cv, eval=args.eval)

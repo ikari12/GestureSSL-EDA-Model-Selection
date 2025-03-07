@@ -1,0 +1,4 @@
+
+
+Performance result for a foldTNC model: 	 AUC: 0.6061500000000002	 Accuracy: 60.615000000000016 
+
