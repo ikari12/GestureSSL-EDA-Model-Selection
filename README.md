@@ -45,7 +45,7 @@ UwaveデータをTNC用に変換する．
 
 ## HARの表現学習と識別を合わせた学習とその評価
 
-ここで転移の元となるHARを学習したTNCも同時に作成される．
+ここで転移の元となるHARを学習したTNCを作成する．
 
 ```
 !python -m tnc.tnc --data har --train --w 0.00001
@@ -53,18 +53,18 @@ UwaveデータをTNC用に変換する．
 
 ## HARの表現学習と識別を合わせた学習とその評価
 
-ここで転移の先となるUwaveを学習したTNCの成績がベースラインとして求められる．
+ここで転移の先となるUwaveを比較のために識別の程度のみを学習した成績がベースラインとして求められる．
 
 ```
-!python -m tnc.tnc --data waveform --train --w 0.00001
+!python -m tnc.evaluation --data waveform --data_path './data/athena/Gesture/' --cv 1
 ```
 
 ## HARの表現学習をUwaveに転移させた際の評価
 
-これにより，TNCの優位性が示される．
+TNCでHARを学習したモデルを識別の程度のためにUwaveで識別のみ学習する．これにより，TNCの優位性が示される．
 
 ```
-!python -m tnc.tnc --data waveform --train --transfer --w 0.00001
+!python -m tnc.evaluation --data har --data_path './data/athena/Gesture/' --cv 1
 ```
 
 # 参考と謝辞
